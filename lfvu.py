@@ -1,13 +1,16 @@
 import numpy as np
+from numpy.typing import NDArray
 import torch
 import torch.nn as nn
 import typing as tp
 from sklearn.neighbors import NearestNeighbors
 
-def compute_neighbors(X: torch.tensor | np.NDArray,
-					  k: int) -> dict[str, torch.tensor]:
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+def compute_neighbors(X: torch.Tensor | NDArray,
+					  k: int) -> dict[str, torch.Tensor]:
 	"""Finds k nearest neighbors in the initial space"""
-	if isinstance(X, torch.tensor):
+	if isinstance(X, torch.Tensor):
 		X_np = X.detach().cpu().numpy()
 	else:
 		X_np = X
@@ -17,19 +20,19 @@ def compute_neighbors(X: torch.tensor | np.NDArray,
 	distances, indices = knn.kneighbors(X_np)
 
 	# Excluding THE point
-	indices = indices[:, 1:self.k+1]
-	distances = distances[:, 1:self.k+1]
+	indices = indices[:, 1:k+1]
+	distances = distances[:, 1:k+1]
 
 	# Saving as torch tensor
-	indices_tensor = torch.tensor(indices, device=self.device, dtype=torch.long)
-	distances_tensor = torch.tensor(distances, device=self.device, dtype=torch.float32)
+	indices_tensor = torch.tensor(indices, device=device, dtype=torch.long)
+	distances_tensor = torch.tensor(distances, device=device, dtype=torch.float32)
 
 	return {'indices': indices_tensor, 'distances': distances_tensor}
 
-def compute_lfvu(X: torch.tensor | np.NDArray,
-				 Y: torch.tensor | np.NDArray,
+def compute_lfvu(X: torch.Tensor | NDArray,
+				 Y: torch.Tensor | NDArray,
 				 N: int,
-				 k: int) -> tuple(torch.tensor):
+				 k: int) -> tuple[torch.Tensor]:
 	"""
 	Computes LFVU and gradients
 	
@@ -39,9 +42,9 @@ def compute_lfvu(X: torch.tensor | np.NDArray,
 	    Mean LFVU
 	LFVU_i : torch tensor
 	    LFVU for each point
-	""	
+	"""	
 	# Computing original distances
-	neighbor_indices, d_original = compute_neigbors(X, k)
+	neighbor_indices, d_original = compute_neighbors(X, k)
 	
 	# Computing low-dimensional distances
 	Y_expanded = Y.unsqueeze(1).expand(-1, k, -1)

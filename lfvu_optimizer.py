@@ -84,8 +84,10 @@ class LFVUOptimizer: # TODO: add dimension reducer to arguments
             X_np = self.X.cpu().numpy()
             pca = PCA(n_components=self.target_dim)
             Y_init = pca.fit_transform(X_np)
+            print(f"Initialization time: {time.time() - init_time:4f} s")
             return torch.tensor(Y_init, dtype=torch.float32,
                                device=self.device, requires_grad=True)
+
 
         elif method == 'random':
             return torch.randn(self.N, self.target_dim,
@@ -96,6 +98,7 @@ class LFVUOptimizer: # TODO: add dimension reducer to arguments
             tsne = TSNE(n_components=self.target_dim, perplexity=30,
                        random_state=42)
             Y_init = tsne.fit_transform(X_np)
+            print(f"Initialization time: {time.time() - init_time:4f} s")
             return torch.tensor(Y_init, dtype=torch.float32,
                                device=self.device, requires_grad=True)
 
@@ -103,6 +106,7 @@ class LFVUOptimizer: # TODO: add dimension reducer to arguments
             X_np = self.X.cpu().numpy()
             reducer = umap.UMAP(n_components=self.target_dim, random_state=42)
             Y_init = reducer.fit_transform(X_np)
+            print(f"Initialization time: {time.time() - init_time:4f} s")
             return torch.tensor(Y_init, dtype=torch.float32,
                                 device=self.device, requires_grad=True)
 
@@ -113,7 +117,7 @@ class LFVUOptimizer: # TODO: add dimension reducer to arguments
         else:
             raise ValueError(f"Неизвестный метод инициализации: {method}")
 
-        print(f"Initialization time: {time.time() - init_time:4f} s")
+        
 
     def _compute_neighbors_X(self):
         """Finds k nearest neighbors in the initial space"""
